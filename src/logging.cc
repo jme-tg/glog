@@ -1528,6 +1528,10 @@ LogMessage::LogMessage(const char* file, int line, LogSeverity severity)
   Init(file, line, severity, &LogMessage::SendToLog);
 }
 
+LogMessage::LogMessage(const char* file, int line, LogSeverity severity, double timestamp) : allocated_ (NULL) {
+  Init(file, line, severity, &LogMessage::SendToLog, timestamp);
+}
+
 LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
                        LogSink* sink, bool also_send_to_log)
     : allocated_(NULL) {
@@ -1550,10 +1554,16 @@ LogMessage::LogMessage(const char* file, int line, LogSeverity severity,
   data_->message_ = message;  // override Init()'s setting to NULL
 }
 
+void LogMessage::Init(const char* file, int line, LogSeverity severity,
+            void (LogMessage::*send_method)()) {
+  WallTime now = WallTime_Now();
+  Init(file, line, severity, send_method, now);
+}
+
 void LogMessage::Init(const char* file,
                       int line,
                       LogSeverity severity,
-                      void (LogMessage::*send_method)()) {
+                      void (LogMessage::*send_method)(), double walltime_now) {
   allocated_ = NULL;
   if (severity != GLOG_FATAL || !exit_on_dfatal) {
 #ifdef GLOG_THREAD_LOCAL_STORAGE
@@ -1597,14 +1607,13 @@ void LogMessage::Init(const char* file,
   data_->line_ = line;
   data_->send_method_ = send_method;
   data_->sink_ = NULL;
-  data_->outvec_ = NULL;
-  WallTime now = WallTime_Now();
-  data_->timestamp_ = static_cast<time_t>(now);
+  data_->outvec_ = NULL;  
+  data_->timestamp_ = static_cast<time_t>(walltime_now);  
   if(FLAGS_log_utc_time)
     gmtime_r(&data_->timestamp_, &data_->tm_time_);
   else
     localtime_r(&data_->timestamp_, &data_->tm_time_);
-  data_->usecs_ = static_cast<int32>((now - data_->timestamp_) * 1000000);
+  data_->usecs_ = static_cast<int32>((walltime_now - data_->timestamp_) * 1000000);
 
   data_->num_chars_to_log_ = 0;
   data_->num_chars_to_syslog_ = 0;

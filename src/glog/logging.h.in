@@ -1424,6 +1424,9 @@ public:
   // saves 17 bytes per call site.
   LogMessage(const char* file, int line, LogSeverity severity);
 
+  // Used for logging with self provided timestamp (epoch secs + fraction usecs)
+  LogMessage(const char* file, int line, LogSeverity severity, double timestamp);
+
   // Constructor to log this message to a specified sink (if not NULL).
   // Implied are: ctr = 0, send_method = &LogMessage::SendToSinkAndLog if
   // also_send_to_log is true, send_method = &LogMessage::SendToSink otherwise.
@@ -1485,6 +1488,9 @@ private:
 
   void Init(const char* file, int line, LogSeverity severity,
             void (LogMessage::*send_method)());
+
+  void Init(const char* file, int line, LogSeverity severity,
+            void (LogMessage::*send_method)(), double walltime_now);
 
   // Used to fill in crash information during LOG(FATAL) failures.
   void RecordCrashReason(glog_internal_namespace_::CrashReason* reason);
