@@ -531,6 +531,9 @@ if (WIN32)
 endif (WIN32)
 
 add_compile_options ($<$<AND:$<BOOL:${HAVE_NO_UNNAMED_TYPE_TEMPLATE_ARGS}>,$<NOT:$<CXX_COMPILER_ID:GNU>>>:-Wno-unnamed-type-template-args>)
+if(CMAKE_SYSTEM_PROCESSOR STREQUAL AMD64)
+add_compile_options(-DHAVE_SNPRINTF)
+endif()
 
 set (_glog_CMake_BINDIR ${CMAKE_INSTALL_BINDIR})
 set (_glog_CMake_INCLUDE_DIR ${CMAKE_INSTALL_INCLUDEDIR})
@@ -577,7 +580,9 @@ add_library (glog
 
 add_library (glog::glog ALIAS glog)
 
+if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL AMD64)
 set_target_properties (glog PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
 
 if (Unwind_FOUND)
   target_link_libraries (glog PUBLIC unwind::unwind)
